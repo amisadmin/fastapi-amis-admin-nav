@@ -107,7 +107,7 @@ class AmisPageManager:
                     parent.remove_child(admin.unique_id)
                     # 2. 再添加到新的父级中
                     append_page_to_site(page, admin)
-            elif page.visible:  # 如果不存在,并且是激活的,则添加到site
+            elif page.is_active and page.visible:  # 如果不存在,并且是激活的,则添加到site
                 # print('查找失败,未注册', page.unique_id)
                 append_page_to_site(page)
 
