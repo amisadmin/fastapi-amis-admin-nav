@@ -37,7 +37,9 @@ class AmisPageManager:
 
     def site_to_db(self, admin_group: AdminGroup, parent_id: int = None):
         """将site对象的菜单页面同步的数据库中"""
-
+        for page in self.db_pages:
+            if not page.is_custom: # 如果不是自定义的,则先全部设置为未激活
+                page.is_active = False
         def append_page_to_db(admin_: PageSchemaAdmin) -> Optional[int]:
             """将页面添加到数据库中"""
             if not admin_.page_schema:  # 如果不存在page_schema,则不保存到数据库
@@ -46,6 +48,7 @@ class AmisPageManager:
             page = self.db_pages_uid_map.get(unique_id)
             # print('unique_id', unique_id, page)
             if page:  # 如果存在数据库中,则读取数据库中设置,并且更新到admin
+                page.is_active = True # 设置为激活
                 return page.id
             # 保存到数据库
             kwargs = {
