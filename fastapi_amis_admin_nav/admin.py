@@ -101,7 +101,7 @@ class NavPageAdmin(admin.ModelAdmin):
         @self.router.post("/reload")
         async def reload_site_page_schema(request: Request):
             await self.db.async_run_sync(lambda session: AmisPageManager(session).db_to_site(self.site))
-            return BaseApiOut(msg="ok")
+            return BaseApiOut(msg="success")
 
         @self.router.get("/get_active_pages")
         async def get_active_pages(request: Request):
@@ -117,7 +117,7 @@ class NavPageAdmin(admin.ModelAdmin):
         @self.router.post("/update_pages")
         async def update_pages(request: Request, data: List[dict] = Body(..., embed=True)):
             await self.db.async_run_sync(lambda session: AmisPageManager(session).update_db_pages_parent_and_sort(data))
-            return BaseApiOut(msg="ok")
+            return BaseApiOut(msg="success")
 
         return super().register_router()
 
