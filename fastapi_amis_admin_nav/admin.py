@@ -127,7 +127,7 @@ class NavPageAdmin(admin.ModelAdmin):
 
     async def get_list_table(self, request: Request) -> TableCRUD:
         table = await super().get_list_table(request)
-        table.defaultParams = {"is_del": False}
+        table.defaultParams = {"is_active": True}
         table.itemBadge = amis.Badge(
             text="Group",
             mode="ribbon",

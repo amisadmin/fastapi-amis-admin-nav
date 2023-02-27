@@ -12,6 +12,7 @@ NodeOrDict = Union[NodeT, Dict[str, Any]]
 
 
 class AmisPageManager:
+
     def __init__(self, session: Session):
         self.session = session
 
@@ -28,18 +29,19 @@ class AmisPageManager:
         return {page.id: page for page in self.db_pages}
 
     @cached_property
-    def site_page(self) -> NavPage:
+    def site_page(self) -> Optional[NavPage]:
         """获取根节点,有且只有一个"""
         for page in self.db_pages:
             if page.parent_id is None:
                 return page
-        raise ValueError("没有找到根节点")
+        return None
 
     def site_to_db(self, admin_group: AdminGroup, parent_id: int = None):
         """将site对象的菜单页面同步的数据库中"""
         for page in self.db_pages:
-            if not page.is_custom: # 如果不是自定义的,则先全部设置为未激活
+            if not page.is_custom:  # 如果不是自定义的,则先全部设置为未激活
                 page.is_active = False
+
         def append_page_to_db(admin_: PageSchemaAdmin) -> Optional[int]:
             """将页面添加到数据库中"""
             if not admin_.page_schema:  # 如果不存在page_schema,则不保存到数据库
@@ -48,7 +50,7 @@ class AmisPageManager:
             page = self.db_pages_uid_map.get(unique_id)
             # print('unique_id', unique_id, page)
             if page:  # 如果存在数据库中,则读取数据库中设置,并且更新到admin
-                page.is_active = True # 设置为激活
+                page.is_active = True  # 设置为激活
                 return page.id
             # 保存到数据库
             kwargs = {
@@ -62,8 +64,13 @@ class AmisPageManager:
             self.session.flush()  # 刷新,获取page_id
             return new_page.id
 
-        # 如果没有parent_id,则作为根节点添加到数据库中,并且获取parent_id
-        parent_id = parent_id or append_page_to_db(admin_group)
+        if not parent_id:  # 如果没有parent_id,则作为根节点添加到数据库中,并且获取parent_id
+            if not self.site_page:
+                parent_id = append_page_to_db(admin_group)
+            else:
+                self.site_page.is_active = True
+                self.site_page.unique_id = admin_group.unique_id
+                parent_id = self.site_page.id
         for admin in admin_group:
             page_id = append_page_to_db(admin)
             if isinstance(admin, AdminGroup):
