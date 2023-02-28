@@ -5,13 +5,14 @@ from fastapi_amis_admin import admin, amis
 from fastapi_amis_admin.admin import AdminApp
 from fastapi_amis_admin.amis import AmisAPI, TableCRUD
 from fastapi_amis_admin.amis.components import Page, PageSchema
-from fastapi_amis_admin.crud import BaseApiOut
+from fastapi_amis_admin.crud import BaseApiOut, ItemListSchema
 from fastapi_amis_admin.crud.base import SchemaModelT
+from sqlalchemy.engine import Result
 from sqlalchemy.sql import Select
 from starlette.requests import Request
 
 from fastapi_amis_admin_nav.models import NavPage
-from fastapi_amis_admin_nav.utils import AmisPageManager
+from fastapi_amis_admin_nav.utils import AmisPageManager, include_children
 
 
 class NavPageAdmin(admin.ModelAdmin):
@@ -135,3 +136,8 @@ class NavPageAdmin(admin.ModelAdmin):
             visibleOn="this.is_group",
         )
         return table
+
+    async def on_list_after(self, request: Request, result: Result, data: ItemListSchema, **kwargs) -> ItemListSchema:
+        data.items = self.parser.conv_row_to_dict(result.all())
+        data.items = [self.list_item(item) for item in include_children(data.items)] if data.items else []
+        return data

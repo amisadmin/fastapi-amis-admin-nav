@@ -112,6 +112,7 @@ class BaseNavPage(SQLModel):
             children=[],
             unfolded=True,
             value=self.id,  # type: ignore
+            parent_id=self.parent_id,  # type: ignore
         )
         return link
 

@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
+from typing import Dict, List, Optional
 
 from fastapi_amis_admin.admin.admin import AdminGroup, PageSchemaAdmin
 from sqlalchemy.future import select
@@ -7,12 +7,8 @@ from sqlalchemy.orm import Session
 
 from fastapi_amis_admin_nav.models import NavPage
 
-NodeT = TypeVar("NodeT")
-NodeOrDict = Union[NodeT, Dict[str, Any]]
-
 
 class AmisPageManager:
-
     def __init__(self, session: Session):
         self.session = session
 
@@ -104,7 +100,7 @@ class AmisPageManager:
             else:
                 admin, parent = admin_group.get_page_schema_child(page.unique_id)
             if admin:  # 如果存在,则更新
-                print("admin 查找到Admin成功", page.unique_id, page.as_page_schema().amis_dict())
+                # print("admin 查找到Admin成功", page.unique_id, page.as_page_schema().amis_dict())
                 page.is_active = True  # 将数据库标记为已激活
                 admin.page_schema = page.as_page_schema()
                 # 对比admin中的父级是否和数据库中的一致,不一致则更新
@@ -146,24 +142,38 @@ class AmisPageManager:
             .order_by(NavPage.sort.desc())
         )
         pages = self.session.scalars(stmt).all()
-
-        def handle_(page: NavPage, children: List[NavPage]) -> dict:
-            link = page.as_nav_link()
-            if children:
-                link.children = children
-            return link.amis_dict()
-
-        return fill_children(pages, parent_id=parent_id, handle=handle_)
+        return include_children([page.as_nav_link().amis_dict() for page in pages], key="value")
 
 
-def fill_children(
-    items: List[NodeT], parent_id: int = None, handle: Callable[[NodeT, List[NodeT]], NodeOrDict] = None
-) -> List[NodeOrDict]:
-    """处理父子节点关系, 递归"""
-    children = []
-    handle = handle or (lambda x, y: setattr(x, "children", y or []) or x)
-    for child in [item for item in items if item.parent_id == parent_id]:
-        items.remove(child)
-        sub_children = fill_children(items, parent_id=child.id, handle=handle)
-        children.append(handle(child, sub_children))
-    return children
+def include_children(items: List[dict], key: str = "id", parent_key: str = "parent_id") -> List[dict]:
+    """处理父子节点关系, 递归.NodeT必须有id,parent_id,children属性"""
+
+    result: List[dict] = []
+
+    def append_child(parent: dict, child_: dict):
+        if not parent.get("children"):
+            parent["children"] = []
+        parent["children"].append(child_)
+        return parent
+
+    def insert_new_node(node: dict, new_items: List[dict], is_top: bool = False) -> bool:
+        #  先把列表中的子节点全部找出来.
+        for item in new_items.copy():
+            if node[key] == item.get(parent_key, None):  # 找出新节点的子节点,添加到新节点的children中
+                new_items.remove(item)
+                node = append_child(node, item)
+        for i, item in enumerate(new_items):
+            if node.get(parent_key, None) == item[key]:  # 如果新节点的父级是当前节点,则添加到当前节点的子节点中
+                new_items[i] = append_child(item, node)
+                return True
+            if item.get("children"):
+                if insert_new_node(node, item["children"], is_top=False):
+                    return True
+        if is_top:
+            new_items.append(node)
+        return False
+
+    for child in items:
+        insert_new_node(child, result, is_top=True)
+
+    return result
