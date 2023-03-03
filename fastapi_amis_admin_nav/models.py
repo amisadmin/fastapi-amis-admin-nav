@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi_amis_admin import amis, models
 from fastapi_amis_admin.amis import PageSchema
 from fastapi_amis_admin.models.fields import Field
-from sqlalchemy import func
+from sqlalchemy import Column, Text, func
 from sqlmodel import Relationship, SQLModel
 
 
@@ -54,6 +54,7 @@ class BaseNavPage(SQLModel):
     page_schema: str = Field(
         ...,
         title="页面配置",
+        sa_column=Column(Text, nullable=False),
         amis_form_item=amis.Editor(language="json"),
         amis_table_column=amis.TableColumn(type="json"),
     )  # 如果是菜单组, 则没有page_schema;如果是普通html页面,则是schema
@@ -68,7 +69,7 @@ class BaseNavPage(SQLModel):
         None,
         title="分组展示模式",
         description="默认为空,展示为导航菜单."
-        "其他模式参考: https://aisuda.bce.baidu.com/amis/zh-CN/components/tabs#%E5%B1%95%E7%A4%BA%E6%A8%A1%E5%BC%8F",
+                    "其他模式参考: https://aisuda.bce.baidu.com/amis/zh-CN/components/tabs#%E5%B1%95%E7%A4%BA%E6%A8%A1%E5%BC%8F",
         amis_form_item={
             "visibleOn": f"(this.is_group || this.type === {NavPageType.Group.value}) && this.type !== {NavPageType.Custom.value}"
         },
