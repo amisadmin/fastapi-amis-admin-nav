@@ -133,15 +133,8 @@ class AmisPageManager:
     # 获取数据库中激活并且可见的页面
     def get_db_active_pages(self, parent_id: int = None) -> List[dict]:
         """获取数据库中的导舤链接"""
-        stmt = (
-            select(NavPage)
-            .where(
-                NavPage.is_active == True,
-                NavPage.visible == True,
-            )
-            .order_by(NavPage.sort.desc())
-        )
-        pages = self.session.scalars(stmt).all()
+        stmt = select(NavPage).where(NavPage.is_active == True, NavPage.visible == True).order_by(NavPage.sort.desc())
+        pages = self.session.scalars(stmt)
         return include_children([page.as_nav_link().amis_dict() for page in pages], key="value")
 
 
