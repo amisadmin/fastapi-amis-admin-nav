@@ -3,7 +3,7 @@ from typing import Any, Dict, List
 from fastapi import Body
 from fastapi_amis_admin import admin, amis
 from fastapi_amis_admin.admin import AdminApp
-from fastapi_amis_admin.amis import AmisAPI, TableCRUD
+from fastapi_amis_admin.amis import AmisAPI, TableCRUD, Form
 from fastapi_amis_admin.amis.components import Page, PageSchema
 from fastapi_amis_admin.crud import BaseApiOut, ItemListSchema
 from fastapi_amis_admin.crud.base import SchemaCreateT
@@ -121,6 +121,12 @@ class NavPageAdmin(admin.ModelAdmin):
             return BaseApiOut(msg="success")
 
         return super().register_router()
+
+    async def get_create_form(self, request: Request, bulk: bool = False) -> Form:
+        form = await super().get_create_form(request, bulk)
+        if not bulk:
+            form.api += "?parent_id=$parent_id"
+        return form
 
     async def on_create_pre(self, request: Request, obj: SchemaCreateT, **kwargs) -> Dict[str, Any]:
         data = await super().on_create_pre(request, obj, **kwargs)
