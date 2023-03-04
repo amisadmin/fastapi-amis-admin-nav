@@ -6,7 +6,7 @@ from fastapi_amis_admin.admin import AdminApp
 from fastapi_amis_admin.amis import AmisAPI, TableCRUD
 from fastapi_amis_admin.amis.components import Page, PageSchema
 from fastapi_amis_admin.crud import BaseApiOut, ItemListSchema
-from fastapi_amis_admin.crud.base import SchemaModelT
+from fastapi_amis_admin.crud.base import SchemaCreateT
 from sqlalchemy.engine import Result
 from sqlalchemy.sql import Select
 from starlette.requests import Request
@@ -122,9 +122,11 @@ class NavPageAdmin(admin.ModelAdmin):
 
         return super().register_router()
 
-    def create_item(self, item: Dict[str, Any]) -> SchemaModelT:
-        item["is_custom"] = True
-        return super().create_item(item)
+    async def on_create_pre(self, request: Request, obj: SchemaCreateT, **kwargs) -> Dict[str, Any]:
+        data = await super().on_create_pre(request, obj, **kwargs)
+        data["is_custom"] = True
+        data["parent_id"] = request.query_params.get("parent_id")
+        return data
 
     async def get_list_table(self, request: Request) -> TableCRUD:
         table = await super().get_list_table(request)
