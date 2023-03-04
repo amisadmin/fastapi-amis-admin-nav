@@ -52,7 +52,7 @@ class BaseNavPage(SQLModel):
     sort: int = Field(0, title="排序")
     desc: str = Field(default="", title="页面描述", max_length=400, amis_form_item="textarea")
     page_schema: str = Field(
-        ...,
+        "{}",
         title="页面配置",
         sa_column=Column(Text, nullable=False),
         amis_form_item=amis.Editor(language="json"),
