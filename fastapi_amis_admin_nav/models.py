@@ -69,7 +69,7 @@ class BaseNavPage(SQLModel):
         None,
         title="分组展示模式",
         description="默认为空,展示为导航菜单."
-                    "其他模式参考: https://aisuda.bce.baidu.com/amis/zh-CN/components/tabs#%E5%B1%95%E7%A4%BA%E6%A8%A1%E5%BC%8F",
+        "其他模式参考: https://aisuda.bce.baidu.com/amis/zh-CN/components/tabs#%E5%B1%95%E7%A4%BA%E6%A8%A1%E5%BC%8F",
         amis_form_item={
             "visibleOn": f"(this.is_group || this.type === {NavPageType.Group.value}) && this.type !== {NavPageType.Custom.value}"
         },
@@ -111,7 +111,6 @@ class BaseNavPage(SQLModel):
             icon=self.icon,
             to=f"?parent_id={self.parent_id or ''}",
             children=[],
-            unfolded=True,
             value=self.id,  # type: ignore
             parent_id=self.parent_id,  # type: ignore
         )
