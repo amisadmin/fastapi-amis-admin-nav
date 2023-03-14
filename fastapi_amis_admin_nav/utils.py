@@ -152,11 +152,11 @@ def include_children(items: List[dict], key: str = "id", parent_key: str = "pare
     def insert_new_node(node: dict, new_items: List[dict], is_top: bool = False) -> bool:
         #  先把列表中的子节点全部找出来.
         for item in new_items.copy():
-            if node[key] == item.get(parent_key, None):  # 找出新节点的子节点,添加到新节点的children中
+            if str(node[key]) == str(item.get(parent_key, None)):  # 找出新节点的子节点,添加到新节点的children中
                 new_items.remove(item)
                 node = append_child(node, item)
         for i, item in enumerate(new_items):
-            if node.get(parent_key, None) == item[key]:  # 如果新节点的父级是当前节点,则添加到当前节点的子节点中
+            if str(node.get(parent_key, None)) == str(item[key]):  # 如果新节点的父级是当前节点,则添加到当前节点的子节点中
                 new_items[i] = append_child(item, node)
                 return True
             if item.get("children"):
