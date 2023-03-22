@@ -3,12 +3,11 @@ from typing import Any, Dict, List
 from fastapi import Body
 from fastapi_amis_admin import admin, amis
 from fastapi_amis_admin.admin import AdminApp
-from fastapi_amis_admin.amis import AmisAPI, TableCRUD, Form
+from fastapi_amis_admin.amis import Form, TableCRUD
 from fastapi_amis_admin.amis.components import Page, PageSchema
 from fastapi_amis_admin.crud import BaseApiOut, ItemListSchema
 from fastapi_amis_admin.crud.base import SchemaCreateT
 from sqlalchemy.engine import Result
-from sqlalchemy.sql import Select
 from starlette.requests import Request
 
 from fastapi_amis_admin_nav.models import NavPage
@@ -17,6 +16,7 @@ from fastapi_amis_admin_nav.utils import AmisPageManager, include_children
 
 class NavPageAdmin(admin.ModelAdmin):
     page_schema = PageSchema(label="页面管理", icon="fa fa-group")
+    page_parser_mode = "html"  # 页面显示为iframe
     model = NavPage
     list_per_page = 100
     list_display = [
@@ -38,6 +38,7 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.is_custom,
         NavPage.is_group,
         NavPage.is_active,
+        NavPage.parent_id,
     ]
 
     create_fields = [
@@ -86,18 +87,6 @@ class NavPageAdmin(admin.ModelAdmin):
         page.toolbar = amis.ActionType.Ajax(label="更新应用页面", api=f"{self.router_path}/reload", level=amis.LevelEnum.primary)
         return page
 
-    async def get_list_table_api(self, request: Request) -> AmisAPI:
-        api = await super().get_list_table_api(request)
-        api.url += "&parent_id=${parent_id}"
-        return api
-
-    async def get_select(self, request: Request) -> Select:
-        sel = await super().get_select(request)
-        parent_id = request.query_params.get("parent_id")
-        if parent_id:  # None为根节点;
-            sel = sel.where(NavPage.parent_id == parent_id)
-        return sel
-
     def register_router(self):
         @self.router.post("/reload")
         async def reload_site_page_schema(request: Request):
@@ -136,7 +125,7 @@ class NavPageAdmin(admin.ModelAdmin):
 
     async def get_list_table(self, request: Request) -> TableCRUD:
         table = await super().get_list_table(request)
-        table.defaultParams = {"is_active": True}
+        table.defaultParams.update({"is_active": True})
         table.itemBadge = amis.Badge(
             text="Group",
             mode="ribbon",
@@ -147,5 +136,5 @@ class NavPageAdmin(admin.ModelAdmin):
 
     async def on_list_after(self, request: Request, result: Result, data: ItemListSchema, **kwargs) -> ItemListSchema:
         data.items = self.parser.conv_row_to_dict(result.all())
-        data.items = [self.list_item(item) for item in include_children(data.items)] if data.items else []
+        data.items = [self.list_item(item) for item in include_children(data.items)]
         return data
