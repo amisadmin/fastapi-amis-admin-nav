@@ -86,8 +86,6 @@ class BaseNavPage(SQLModel):
         page.sort = self.sort
         if self.is_group:  # 如果是分组,则同步tabsMode
             page.tabsMode = self.tabs_mode
-            if page.tabsMode is None:
-                page.schemaApi = None
         page.visible = self.visible
         return page
 
