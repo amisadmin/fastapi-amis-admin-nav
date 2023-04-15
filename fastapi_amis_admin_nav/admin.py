@@ -10,7 +10,7 @@ from fastapi_amis_admin.crud.base import SchemaCreateT
 from sqlalchemy.engine import Result
 from starlette.requests import Request
 
-from fastapi_amis_admin_nav.models import NavPage
+from fastapi_amis_admin_nav.models import NavPage, NavPageType
 from fastapi_amis_admin_nav.utils import AmisPageManager, include_children
 
 
@@ -121,6 +121,8 @@ class NavPageAdmin(admin.ModelAdmin):
         data = await super().on_create_pre(request, obj, **kwargs)
         data["is_custom"] = True
         data["parent_id"] = request.query_params.get("parent_id")
+        if data.get("type") == NavPageType.Group:
+            data["is_group"] = True
         return data
 
     async def get_list_table(self, request: Request) -> TableCRUD:

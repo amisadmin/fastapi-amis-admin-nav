@@ -77,42 +77,54 @@ class AmisPageManager:
     def db_to_site(self, admin_group: AdminGroup):
         """将数据库中的菜单页面页面同步到site中"""
 
-        def append_page_to_site(page_: NavPage, admin_: PageSchemaAdmin = None):
+        def append_page_to_site(page_: NavPage, admin_: PageSchemaAdmin = None) -> Optional[PageSchemaAdmin]:
             """添加子级菜单"""
             group = admin_group
             if page_.parent_id:
-                group, _ = admin_group.get_page_schema_child(page_.parent.unique_id)
+                if page_.parent.unique_id == admin_group.unique_id:  # 如果父级是根级,则直接添加
+                    group = admin_group
+                else:  # 如果父级不是根级,则先查找父级
+                    group, _ = admin_group.get_page_schema_child(page_.parent.unique_id)
+                if not group:  # 如果父级不存在,则不添加; 尝试先添加父级
+                    group = update_page_to_site(page_.parent)
             if not group:
-                return
+                return None
             if not admin_:
-                admin_ = PageSchemaAdmin(group.app)
+                admin_ = AdminGroup(group.app) if page_.is_group else PageSchemaAdmin(group.app)
                 admin_.page_schema = page_.as_page_schema()
                 setattr(admin_, "unique_id", page_.unique_id)  # noqa: B010
             if group and isinstance(group, AdminGroup):
                 group.append_child(admin_)
+                return admin_
+            return None
 
-        for page in self.db_pages:
-            if not page.is_custom:  # 如果不存在,并且不是自定义,则标记为未激活
-                page.is_active = False
-            if page.parent_id is None:  # 如果是根级,则直接更新
+        def update_page_to_site(page_: NavPage) -> Optional[PageSchemaAdmin]:
+            """更新菜单"""
+            if not page_.is_custom:  # 如果不存在,并且不是自定义,则标记为未激活
+                page_.is_active = False
+            if page_.parent_id is None:  # 如果是根级,则直接更新
                 admin, parent = admin_group, None
-                page.visible = True  # 标记为可见
+                page_.visible = True  # 标记为可见
             else:
-                admin, parent = admin_group.get_page_schema_child(page.unique_id)
+                admin, parent = admin_group.get_page_schema_child(page_.unique_id)
             if admin:  # 如果存在,则更新
                 # print("admin 查找到Admin成功", page.unique_id, page.as_page_schema().amis_dict())
-                page.is_active = True  # 将数据库标记为已激活
-                admin.page_schema = page.as_page_schema()
+                page_.is_active = True  # 将数据库标记为已激活
+                admin.page_schema = page_.as_page_schema()
                 # 对比admin中的父级是否和数据库中的一致,不一致则更新
-                if page.parent_id and parent.unique_id != page.parent.unique_id:  # 如果不是根级,并且父级不一致,则更新父级
+                if page_.parent_id and parent.unique_id != page_.parent.unique_id:  # 如果不是根级,并且父级不一致,则更新父级
                     # print('父级不一致', parent.unique_id, admin.unique_id)
                     # 1. 先从原来的父级中删除
                     parent.remove_child(admin.unique_id)
                     # 2. 再添加到新的父级中
-                    append_page_to_site(page, admin)
-            elif page.is_active and page.visible:  # 如果不存在,并且是激活的,则添加到site
-                # print('查找失败,未注册', page.unique_id)
-                append_page_to_site(page)
+                    return append_page_to_site(page_, admin)
+            elif page_.is_active and page_.visible:  # 如果不存在,并且是激活的,则添加到site
+                # print('查找失败,未注册', page_.unique_id, page_.label)
+                return append_page_to_site(page_)
+            return None
+
+        for page in self.db_pages:
+            update_page_to_site(page)
 
         return self
 
@@ -152,11 +164,11 @@ def include_children(items: List[dict], key: str = "id", parent_key: str = "pare
     def insert_new_node(node: dict, new_items: List[dict], is_top: bool = False) -> bool:
         #  先把列表中的子节点全部找出来.
         for item in new_items.copy():
-            if str(node[key]) == str(item.get(parent_key, None)):  # 找出新节点的子节点,添加到新节点的children中
+            if node[key] == item.get(parent_key, None):  # 找出新节点的子节点,添加到新节点的children中
                 new_items.remove(item)
                 node = append_child(node, item)
         for i, item in enumerate(new_items):
-            if str(node.get(parent_key, None)) == str(item[key]):  # 如果新节点的父级是当前节点,则添加到当前节点的子节点中
+            if node.get(parent_key, None) == item[key]:  # 如果新节点的父级是当前节点,则添加到当前节点的子节点中
                 new_items[i] = append_child(item, node)
                 return True
             if item.get("children"):
