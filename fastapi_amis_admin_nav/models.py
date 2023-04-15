@@ -42,7 +42,6 @@ class BaseNavPage(SQLModel):
     url: str = Field(
         "",
         title="页面路径",
-        max_length=50,
         amis_form_item={  # 非自定义页面, 都是只读
             "disabledOn": "!this.is_custom",
         },
