@@ -47,6 +47,8 @@ class AmisPageManager:
             # print('unique_id', unique_id, page)
             if page:  # 如果存在数据库中,则读取数据库中设置,并且更新到admin
                 page.is_active = True  # 设置为激活
+                page.icon = admin_.page_schema.icon or page.icon
+                page.label = admin_.page_schema.label or page.label
                 return page.id
             # 保存到数据库
             kwargs = {
