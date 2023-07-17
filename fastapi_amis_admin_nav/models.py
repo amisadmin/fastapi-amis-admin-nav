@@ -47,7 +47,24 @@ class BaseNavPage(SQLModel):
         },
     )
     label: str = Field(..., title="页面名称", max_length=20)
-    icon: str = Field(default="fa fa-flash", title="页面图标", max_length=50)
+    icon: str = Field(
+        default="fa fa-flash",
+        title="页面图标",
+        description="参考: https://fontawesome.com/",
+        amis_form_item=amis.Group(
+            name="icon",
+            body=[
+                amis.InputText(
+                    name="icon",
+                    required=True
+                ),
+                amis.Tpl(
+                    label="图标预览",
+                    tpl="<i class=\"cxd-Button-icon fa-2x ${icon}\"></i>",
+                ),
+            ],
+        )
+    )
     sort: int = Field(0, title="排序")
     desc: str = Field(default="", title="页面描述", max_length=400, amis_form_item="textarea")
     page_schema: str = Field(

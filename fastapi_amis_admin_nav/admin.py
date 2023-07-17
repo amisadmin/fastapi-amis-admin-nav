@@ -23,6 +23,11 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.id,
         NavPage.label,
         NavPage.icon,
+        amis.TableColumn(
+            type="tpl",
+            label="图标预览",
+            tpl="<i class=\"cxd-Button-icon fa-2x ${icon}\"></i>",
+        ),
         NavPage.url,
         NavPage.desc,
         NavPage.visible,
