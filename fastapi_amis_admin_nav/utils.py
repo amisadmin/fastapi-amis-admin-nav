@@ -9,6 +9,7 @@ from fastapi_amis_admin_nav.models import NavPage
 
 
 class AmisPageManager:
+
     def __init__(self, session: Session):
         self.session = session
 
@@ -47,17 +48,19 @@ class AmisPageManager:
             # print('unique_id', unique_id, page)
             if page:  # 如果存在数据库中,则读取数据库中设置,并且更新到admin
                 page.is_active = True  # 设置为激活
-                page.icon = admin_.page_schema.icon or page.icon
-                page.label = admin_.page_schema.label or page.label
+                if not page.is_locked:  # 判断是否锁定,如果锁定,则不更新.
+                    page.update_from_page_schema(admin_.page_schema)
                 return page.id
             # 保存到数据库
             kwargs = {
+                "label": admin_.page_schema.label,
+                "sort": admin_.page_schema.sort,
                 "parent_id": parent_id,
                 "unique_id": unique_id,
             }
             if isinstance(admin_, AdminGroup):
                 kwargs["is_group"] = True
-            new_page = NavPage.parse_page_schema(admin_.page_schema, **kwargs)
+            new_page = NavPage(**kwargs).update_from_page_schema(admin_.page_schema)
             self.session.add(new_page)
             self.session.flush()  # 刷新,获取page_id
             return new_page.id

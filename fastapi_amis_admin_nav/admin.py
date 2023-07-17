@@ -27,6 +27,7 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.desc,
         NavPage.visible,
         NavPage.unique_id,
+        NavPage.is_locked,
         NavPage.is_active,
         NavPage.update_time,
     ]
@@ -38,6 +39,7 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.is_custom,
         NavPage.is_group,
         NavPage.is_active,
+        NavPage.is_locked,
         NavPage.parent_id,
     ]
 
@@ -48,7 +50,8 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.url,
         NavPage.desc,
         NavPage.visible,
-        NavPage.tabs_mode,
+        NavPage.tabsMode,
+        NavPage.is_locked,
         NavPage.page_schema,
     ]
 
@@ -59,7 +62,8 @@ class NavPageAdmin(admin.ModelAdmin):
         NavPage.url,
         NavPage.desc,
         NavPage.visible,
-        NavPage.tabs_mode,
+        NavPage.tabsMode,
+        NavPage.is_locked,
         NavPage.page_schema,
     ]
 
