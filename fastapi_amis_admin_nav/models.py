@@ -33,18 +33,14 @@ def parse_page_schema_type(obj: PageSchema) -> NavPageType:
 
 class BaseNavPage(SQLModel):
     id: int = Field(default=None, primary_key=True, nullable=False)
-    update_time: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        title="更新时间",
-        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
-    )
     type: NavPageType = Field(NavPageType.Custom, title="页面类型")
-    url: str = Field(
-        "",
+    url: Optional[str] = Field(
+        None,
         title="页面路径",
         amis_form_item={  # 非自定义页面, 都是只读
             "disabledOn": "!this.is_custom",
         },
+        nullable=True,
     )
     label: str = Field(..., title="页面名称", max_length=20)
     icon: str = Field(
@@ -95,6 +91,11 @@ class BaseNavPage(SQLModel):
     is_custom: bool = Field(False, title="是否自定义")
     is_active: bool = Field(True, title="是否激活")
     is_locked: bool = Field(False, title="是否锁定", description="不锁定,则自动同步系统页面默认配置")
+    update_time: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        title="更新时间",
+        sa_column_kwargs={"onupdate": func.now(), "server_default": func.now()},
+    )
 
     def as_page_schema(self) -> PageSchema:
         page = PageSchema.parse_raw(self.page_schema)
