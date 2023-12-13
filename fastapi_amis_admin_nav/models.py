@@ -4,10 +4,10 @@ from typing import Optional
 
 from fastapi_amis_admin import amis, models
 from fastapi_amis_admin.amis import PageSchema
-from fastapi_amis_admin.models.fields import Field
+from fastapi_amis_admin.models import Field
 from sqlalchemy import Column, Text, func
-from sqlmodel import Relationship, SQLModel
-
+from sqlmodel import Relationship
+from sqlmodelx import SQLModel
 
 class NavPageType(models.IntegerChoices):
     Group = 1, "页面分组"
@@ -32,7 +32,7 @@ def parse_page_schema_type(obj: PageSchema) -> NavPageType:
 
 
 class BaseNavPage(SQLModel):
-    id: int = Field(default=None, primary_key=True, nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True, nullable=False)
     type: NavPageType = Field(NavPageType.Custom, title="页面类型")
     url: Optional[str] = Field(
         None,
