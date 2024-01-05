@@ -142,10 +142,12 @@ class AmisPageManager:
             if not page:
                 continue
             page.sort = -1 * i  # 排序
-            if page.parent_id:  # 如果不是根级,则更新父级.
+            if page.id != self.site_page.id:  # 如果不是根级,则更新父级.
                 page.parent_id = parent_id or self.site_page.id  # 父级
             if link.get("children"):
-                self.update_db_pages_parent_and_sort(link["children"], parent_id=page.id if page.is_group else page.parent_id)
+                self.update_db_pages_parent_and_sort(
+                    link["children"], parent_id=page.id if page.is_group else page.parent_id
+                )
 
     # 获取数据库中激活并且可见的页面
     def get_db_active_pages(self, parent_id: int = None) -> List[dict]:

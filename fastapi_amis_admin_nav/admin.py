@@ -110,7 +110,7 @@ class NavPageAdmin(admin.ModelAdmin):
                 root = items[0]
                 children = items[0]["children"]
                 root["children"] = []
-                items = [root, *children]
+                items = [root, *children, *items[1:]]
             return BaseApiOut(data=items)
 
         @self.router.post("/update_pages")
@@ -129,7 +129,7 @@ class NavPageAdmin(admin.ModelAdmin):
     async def on_create_pre(self, request: Request, obj: SchemaCreateT, **kwargs) -> Dict[str, Any]:
         data = await super().on_create_pre(request, obj, **kwargs)
         data["is_custom"] = True
-        data["parent_id"] = request.query_params.get("parent_id")
+        data["parent_id"] = request.query_params.get("parent_id")  or None
         if data.get("type") == NavPageType.Group:
             data["is_group"] = True
         return data

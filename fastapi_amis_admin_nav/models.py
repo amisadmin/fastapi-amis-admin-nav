@@ -74,7 +74,7 @@ class BaseNavPage(SQLModel):
     unique_id: str = Field(
         default_factory=lambda: str(uuid.uuid4()).replace("-", "")[:16],
         title="标识",
-        max_length=40,
+        max_length=100,
         unique=True,
     )
     tabsMode: Optional[amis.TabsModeEnum] = Field(
